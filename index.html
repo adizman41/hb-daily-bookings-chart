@@ -97,27 +97,43 @@ let showAnnotations = true;
 
 const annotationDefs = [{"day": 122, "year": "Year 3", "color": "#e65100", "label": "Free taksit removed (~Aug 2023)"}, {"day": 306, "year": "Year 3", "color": "#e65100", "label": "KuveytTurk 6+3 deal (Feb 2024)"}, {"day": 131, "year": "Year 2", "color": "#1565c0", "label": "9 taksit dropped (Aug 2024)"}, {"day": 226, "year": "Year 2", "color": "#1565c0", "label": "No free installment any bank (Nov 2024)"}, {"day": 85, "year": "Year 1", "color": "#2e7d32", "label": "Ziraat Katilim partnership (Jul 2025)"}, {"day": 326, "year": "Year 1", "color": "#2e7d32", "label": "New taksit table format (Mar 2026)"}];
 
+// Manual layout: [dayIndex, color, shortLabel, yAdjust, position]
+const annotationLayout = [
+  { idx: 0, yAdj: 0,   pos: 'start' },   // day 85  - Ziraat (top)
+  { idx: 1, yAdj: 40,  pos: 'start' },   // day 122 - Free taksit removed (top, lower)
+  { idx: 2, yAdj: 0,   pos: 'end'   },   // day 131 - 9 taksit dropped (bottom)
+  { idx: 3, yAdj: 0,   pos: 'start' },   // day 226 - No free installment (top)
+  { idx: 4, yAdj: 0,   pos: 'start' },   // day 306 - KuveytTurk 6+3 (top)
+  { idx: 5, yAdj: 0,   pos: 'end'   },   // day 326 - Taksit table (bottom)
+];
+
 function buildAnnotations() {
   const annos = {};
   annotationDefs.forEach((a, i) => {
+    const lay = annotationLayout[i];
     annos['line'+i] = {
       type: 'line',
       xMin: a.day - 1,
       xMax: a.day - 1,
-      borderColor: a.color,
-      borderWidth: 2,
-      borderDash: [6, 4],
+      borderColor: a.color + '99',
+      borderWidth: 1.5,
+      borderDash: [5, 5],
       display: showAnnotations,
       label: {
         display: showAnnotations,
         content: a.label,
-        position: i % 2 === 0 ? 'start' : 'end',
-        backgroundColor: a.color,
+        position: lay.pos,
+        backgroundColor: a.color + 'DD',
         color: 'white',
-        font: { size: 10, weight: 'bold' },
-        padding: { x: 6, y: 3 },
+        font: { size: 11, weight: '600' },
+        padding: { x: 8, y: 4 },
         borderRadius: 4,
-        yAdjust: i % 3 === 0 ? -10 : (i % 3 === 1 ? 10 : 30)
+        yAdjust: lay.yAdj,
+        callout: {
+          display: true,
+          borderColor: a.color + '99',
+          borderWidth: 1
+        }
       }
     };
   });
