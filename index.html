@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Daily Committed Bookings - 3 Year Comparison</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<style>
+  body { font-family: 'Segoe UI', sans-serif; background: #f5f7fa; margin: 0; padding: 20px; }
+  .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+  h1 { color: #1a1a2e; margin-bottom: 5px; }
+  .subtitle { color: #666; margin-bottom: 25px; font-size: 14px; }
+  .stats { display: flex; gap: 20px; margin-bottom: 25px; flex-wrap: wrap; }
+  .stat-card { flex: 1; min-width: 200px; padding: 18px; border-radius: 10px; text-align: center; }
+  .stat-card h3 { margin: 0 0 8px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; }
+  .stat-card .avg { font-size: 13px; margin-top: 4px; opacity: 0.8; }
+  .card1 { background: #e8f5e9; color: #2e7d32; }
+  .card2 { background: #e3f2fd; color: #1565c0; }
+  .card3 { background: #fff3e0; color: #e65100; }
+  .chart-container { position: relative; height: 550px; }
+  .controls { margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .controls label { font-size: 13px; color: #666; }
+  .toggle-btn { padding: 6px 14px; border: 1px solid #ddd; border-radius: 6px; background: white; cursor: pointer; font-size: 13px; }
+  .toggle-btn.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+  .legend-box { margin-top: 20px; padding: 16px; background: #fafafa; border-radius: 8px; border: 1px solid #eee; }
+  .legend-box h4 { margin: 0 0 10px 0; font-size: 13px; color: #333; text-transform: uppercase; letter-spacing: 1px; }
+  .event-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 6px; }
+  .event-item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #444; }
+  .event-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Daily Committed Bookings</h1>
+  <p class="subtitle">3-Year Comparison &middot; Day of Year (Apr &ndash; Apr cycle) &middot; Taksit Events Annotated</p>
+
+  <div class="stats">
+    <div class="stat-card card3">
+      <h3>Year 3 (730-1095 days ago)</h3>
+      <div class="value">22,641</div>
+      <div class="avg">Avg 62/day</div>
+    </div>
+    <div class="stat-card card2">
+      <h3>Year 2 (365-730 days ago)</h3>
+      <div class="value">26,821</div>
+      <div class="avg">Avg 73/day &middot; +18.5% YoY</div>
+    </div>
+    <div class="stat-card card1">
+      <h3>Year 1 (Last 365 days)</h3>
+      <div class="value">40,370</div>
+      <div class="avg">Avg 110/day &middot; +50.5% YoY</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label>View:</label>
+    <button class="toggle-btn" onclick="toggleView('raw')" id="btn-raw">Daily</button>
+    <button class="toggle-btn active" onclick="toggleView('ma')" id="btn-ma">7-Day Avg</button>
+    <span style="margin-left:20px"></span>
+    <label>Annotations:</label>
+    <button class="toggle-btn active" onclick="toggleAnnotations()" id="btn-anno">Show Events</button>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="chart"></canvas>
+  </div>
+
+  <div class="legend-box">
+    <h4>Taksit Events Timeline</h4>
+    <div class="event-list">
+      <div class="event-item"><span class="event-dot" style="background:#e65100"></span><strong>~Aug 2023</strong> &mdash; Free taksit option removed (high interest rates)</div>
+      <div class="event-item"><span class="event-dot" style="background:#e65100"></span><strong>Feb 2024</strong> &mdash; KuveytTurk commits to 6+3 free taksit</div>
+      <div class="event-item"><span class="event-dot" style="background:#1565c0"></span><strong>Aug 2024</strong> &mdash; 9 taksit no longer offered</div>
+      <div class="event-item"><span class="event-dot" style="background:#1565c0"></span><strong>Nov 2024</strong> &mdash; No interest-free installment for any bank</div>
+      <div class="event-item"><span class="event-dot" style="background:#2e7d32"></span><strong>Jul 2025</strong> &mdash; Ziraat Katilim partnership launched</div>
+      <div class="event-item"><span class="event-dot" style="background:#2e7d32"></span><strong>Mar 2026</strong> &mdash; New taksit table format deployed</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const labels = ["09 Apr", "10 Apr", "11 Apr", "12 Apr", "13 Apr", "14 Apr", "15 Apr", "16 Apr", "17 Apr", "18 Apr", "19 Apr", "20 Apr", "21 Apr", "22 Apr", "23 Apr", "24 Apr", "25 Apr", "26 Apr", "27 Apr", "28 Apr", "29 Apr", "30 Apr", "01 May", "02 May", "03 May", "04 May", "05 May", "06 May", "07 May", "08 May", "09 May", "10 May", "11 May", "12 May", "13 May", "14 May", "15 May", "16 May", "17 May", "18 May", "19 May", "20 May", "21 May", "22 May", "23 May", "24 May", "25 May", "26 May", "27 May", "28 May", "29 May", "30 May", "31 May", "01 Jun", "02 Jun", "03 Jun", "04 Jun", "05 Jun", "06 Jun", "07 Jun", "08 Jun", "09 Jun", "10 Jun", "11 Jun", "12 Jun", "13 Jun", "14 Jun", "15 Jun", "16 Jun", "17 Jun", "18 Jun", "19 Jun", "20 Jun", "21 Jun", "22 Jun", "23 Jun", "24 Jun", "25 Jun", "26 Jun", "27 Jun", "28 Jun", "29 Jun", "30 Jun", "01 Jul", "02 Jul", "03 Jul", "04 Jul", "05 Jul", "06 Jul", "07 Jul", "08 Jul", "09 Jul", "10 Jul", "11 Jul", "12 Jul", "13 Jul", "14 Jul", "15 Jul", "16 Jul", "17 Jul", "18 Jul", "19 Jul", "20 Jul", "21 Jul", "22 Jul", "23 Jul", "24 Jul", "25 Jul", "26 Jul", "27 Jul", "28 Jul", "29 Jul", "30 Jul", "31 Jul", "01 Aug", "02 Aug", "03 Aug", "04 Aug", "05 Aug", "06 Aug", "07 Aug", "08 Aug", "09 Aug", "10 Aug", "11 Aug", "12 Aug", "13 Aug", "14 Aug", "15 Aug", "16 Aug", "17 Aug", "18 Aug", "19 Aug", "20 Aug", "21 Aug", "22 Aug", "23 Aug", "24 Aug", "25 Aug", "26 Aug", "27 Aug", "28 Aug", "29 Aug", "30 Aug", "31 Aug", "01 Sep", "02 Sep", "03 Sep", "04 Sep", "05 Sep", "06 Sep", "07 Sep", "08 Sep", "09 Sep", "10 Sep", "11 Sep", "12 Sep", "13 Sep", "14 Sep", "15 Sep", "16 Sep", "17 Sep", "18 Sep", "19 Sep", "20 Sep", "21 Sep", "22 Sep", "23 Sep", "24 Sep", "25 Sep", "26 Sep", "27 Sep", "28 Sep", "29 Sep", "30 Sep", "01 Oct", "02 Oct", "03 Oct", "04 Oct", "05 Oct", "06 Oct", "07 Oct", "08 Oct", "09 Oct", "10 Oct", "11 Oct", "12 Oct", "13 Oct", "14 Oct", "15 Oct", "16 Oct", "17 Oct", "18 Oct", "19 Oct", "20 Oct", "21 Oct", "22 Oct", "23 Oct", "24 Oct", "25 Oct", "26 Oct", "27 Oct", "28 Oct", "29 Oct", "30 Oct", "31 Oct", "01 Nov", "02 Nov", "03 Nov", "04 Nov", "05 Nov", "06 Nov", "07 Nov", "08 Nov", "09 Nov", "10 Nov", "11 Nov", "12 Nov", "13 Nov", "14 Nov", "15 Nov", "16 Nov", "17 Nov", "18 Nov", "19 Nov", "20 Nov", "21 Nov", "22 Nov", "23 Nov", "24 Nov", "25 Nov", "26 Nov", "27 Nov", "28 Nov", "29 Nov", "30 Nov", "01 Dec", "02 Dec", "03 Dec", "04 Dec", "05 Dec", "06 Dec", "07 Dec", "08 Dec", "09 Dec", "10 Dec", "11 Dec", "12 Dec", "13 Dec", "14 Dec", "15 Dec", "16 Dec", "17 Dec", "18 Dec", "19 Dec", "20 Dec", "21 Dec", "22 Dec", "23 Dec", "24 Dec", "25 Dec", "26 Dec", "27 Dec", "28 Dec", "29 Dec", "30 Dec", "31 Dec", "01 Jan", "02 Jan", "03 Jan", "04 Jan", "05 Jan", "06 Jan", "07 Jan", "08 Jan", "09 Jan", "10 Jan", "11 Jan", "12 Jan", "13 Jan", "14 Jan", "15 Jan", "16 Jan", "17 Jan", "18 Jan", "19 Jan", "20 Jan", "21 Jan", "22 Jan", "23 Jan", "24 Jan", "25 Jan", "26 Jan", "27 Jan", "28 Jan", "29 Jan", "30 Jan", "31 Jan", "01 Feb", "02 Feb", "03 Feb", "04 Feb", "05 Feb", "06 Feb", "07 Feb", "08 Feb", "09 Feb", "10 Feb", "11 Feb", "12 Feb", "13 Feb", "14 Feb", "15 Feb", "16 Feb", "17 Feb", "18 Feb", "19 Feb", "20 Feb", "21 Feb", "22 Feb", "23 Feb", "24 Feb", "25 Feb", "26 Feb", "27 Feb", "28 Feb", "01 Mar", "02 Mar", "03 Mar", "04 Mar", "05 Mar", "06 Mar", "07 Mar", "08 Mar", "09 Mar", "10 Mar", "11 Mar", "12 Mar", "13 Mar", "14 Mar", "15 Mar", "16 Mar", "17 Mar", "18 Mar", "19 Mar", "20 Mar", "21 Mar", "22 Mar", "23 Mar", "24 Mar", "25 Mar", "26 Mar", "27 Mar", "28 Mar", "29 Mar", "30 Mar", "31 Mar", "01 Apr", "02 Apr", "03 Apr", "04 Apr", "05 Apr", "06 Apr", "07 Apr", "08 Apr"];
+const rawData = {
+  year1: [49, 74, 66, 37, 55, 47, 30, 45, 52, 57, 56, 44, 47, 41, 64, 51, 56, 53, 63, 48, 33, 61, 73, 42, 52, 63, 43, 35, 83, 63, 70, 66, 57, 44, 27, 57, 35, 82, 65, 63, 55, 43, 57, 49, 59, 64, 54, 42, 49, 60, 56, 71, 46, 57, 44, 36, 57, 75, 66, 52, 70, 55, 38, 82, 46, 55, 59, 48, 38, 30, 51, 54, 44, 44, 59, 47, 33, 56, 65, 63, 56, 79, 33, 65, 79, 98, 78, 98, 68, 51, 55, 71, 79, 88, 69, 96, 79, 109, 48, 44, 33, 37, 46, 54, 41, 27, 42, 67, 70, 57, 31, 44, 39, 65, 71, 87, 71, 80, 54, 53, 54, 53, 52, 63, 49, 26, 38, 48, 68, 40, 55, 57, 34, 24, 53, 53, 71, 56, 70, 51, 24, 70, 62, 76, 60, 64, 42, 37, 61, 65, 104, 81, 81, 61, 59, 66, 75, 122, 102, 84, 56, 81, 93, 100, 72, 76, 76, 73, 61, 65, 91, 86, 81, 89, 77, 95, 72, 63, 37, 42, 54, 59, 84, 71, 86, 112, 79, 103, 77, 92, 101, 109, 92, 99, 73, 82, 69, 58, 85, 99, 77, 111, 106, 79, 92, 82, 89, 109, 82, 75, 77, 109, 114, 96, 92, 84, 98, 81, 78, 80, 86, 136, 107, 81, 108, 121, 112, 104, 120, 89, 91, 84, 89, 89, 89, 82, 93, 97, 70, 107, 85, 76, 73, 73, 65, 53, 68, 60, 72, 83, 53, 75, 49, 75, 85, 70, 81, 73, 54, 39, 65, 73, 62, 71, 72, 41, 56, 81, 59, 61, 64, 55, 68, 49, 41, 55, 51, 52, 46, 28, 32, 52, 57, 53, 34, 43, 33, 35, 47, 35, 51, 48, 45, 39, 33, 57, 39, 50, 47, 42, 38, 27, 41, 48, 43, 42, 45, 38, 40, 43, 50, 44, 56, 52, 48, 41, 57, 48, 44, 43, 54, 43, 31, 60, 58, 43, 46, 37, 38, 44, 64, 45, 36, 62, 43, 38, 43, 37, 40, 39, 43, 31, 44, 30, 49, 42, 39, 68, 50, 42, 32, 48, 62, 46, 46, 53, 41, 44, 50, 61, 62, 83, 58, 93, 114],
+  year2: [86, 69, 70, 51, 56, 57, 64, 72, 76, 88, 37, 60, 82, 70, 48, 64, 68, 58, 47, 67, 77, 72, 49, 62, 46, 49, 75, 78, 49, 67, 65, 58, 63, 61, 64, 63, 79, 53, 57, 47, 61, 52, 67, 76, 77, 61, 43, 91, 78, 67, 59, 69, 44, 49, 44, 58, 49, 52, 43, 55, 44, 69, 61, 59, 62, 48, 59, 50, 93, 65, 69, 71, 82, 45, 58, 70, 83, 63, 44, 77, 52, 67, 64, 85, 89, 88, 84, 84, 55, 80, 78, 89, 67, 68, 46, 73, 78, 0, 66, 82, 45, 34, 46, 58, 46, 61, 70, 60, 76, 85, 76, 48, 64, 58, 58, 70, 66, 60, 58, 84, 84, 80, 67, 58, 51, 56, 53, 71, 71, 68, 67, 58, 49, 70, 58, 94, 75, 77, 52, 46, 59, 66, 70, 53, 63, 52, 52, 52, 59, 68, 69, 94, 58, 51, 90, 77, 62, 89, 77, 68, 98, 90, 99, 69, 79, 122, 85, 53, 73, 71, 86, 94, 85, 80, 61, 86, 86, 95, 88, 79, 79, 84, 102, 94, 97, 87, 78, 70, 76, 120, 109, 111, 104, 111, 84, 77, 105, 120, 115, 86, 123, 101, 79, 137, 129, 126, 108, 124, 107, 101, 129, 129, 101, 127, 100, 85, 84, 112, 113, 105, 108, 122, 106, 101, 131, 138, 120, 116, 104, 82, 95, 112, 110, 113, 140, 94, 78, 89, 106, 99, 113, 89, 91, 94, 83, 79, 74, 110, 86, 89, 68, 65, 74, 67, 75, 102, 69, 54, 42, 73, 69, 69, 58, 70, 59, 60, 64, 71, 54, 60, 61, 56, 52, 68, 49, 67, 81, 56, 59, 47, 76, 67, 62, 76, 65, 46, 48, 73, 53, 66, 71, 68, 55, 46, 78, 68, 61, 73, 75, 70, 60, 54, 62, 60, 67, 65, 53, 62, 66, 83, 65, 69, 69, 65, 48, 69, 66, 63, 78, 68, 68, 38, 98, 80, 101, 98, 64, 58, 63, 59, 73, 69, 64, 79, 72, 58, 85, 69, 84, 77, 68, 55, 55, 78, 86, 53, 54, 60, 64, 30, 55, 72, 59, 69, 70, 68, 77, 70, 83, 88, 67, 79, 73, 82, 118],
+  year3: [96, 108, 79, 89, 127, 97, 99, 126, 130, 92, 84, 155, 143, 138, 103, 123, 95, 108, 140, 136, 131, 134, 118, 112, 106, 150, 104, 102, 113, 120, 168, 85, 109, 120, 132, 106, 112, 82, 85, 136, 103, 117, 112, 102, 101, 114, 115, 88, 95, 54, 104, 73, 67, 91, 104, 80, 89, 137, 134, 51, 89, 104, 87, 99, 60, 60, 84, 107, 110, 89, 116, 105, 109, 92, 89, 122, 89, 80, 42, 48, 65, 96, 121, 91, 150, 106, 74, 95, 137, 230, 120, 117, 100, 107, 91, 106, 115, 85, 63, 66, 71, 58, 65, 81, 77, 75, 71, 66, 62, 57, 79, 80, 66, 67, 81, 68, 83, 85, 102, 117, 86, 78, 64, 48, 55, 85, 80, 80, 92, 80, 76, 91, 78, 90, 110, 119, 79, 66, 83, 113, 81, 96, 78, 84, 91, 90, 88, 80, 81, 104, 102, 113, 94, 70, 99, 89, 59, 66, 94, 84, 96, 150, 134, 100, 113, 74, 109, 116, 95, 101, 114, 95, 83, 120, 115, 110, 126, 119, 91, 98, 164, 123, 137, 136, 118, 112, 112, 105, 150, 137, 118, 124, 138, 131, 135, 129, 115, 136, 145, 131, 115, 150, 124, 130, 151, 140, 132, 100, 123, 136, 153, 165, 137, 128, 109, 175, 174, 130, 162, 142, 143, 118, 147, 157, 192, 154, 160, 177, 135, 175, 166, 157, 183, 152, 140, 150, 166, 140, 150, 105, 137, 107, 122, 158, 139, 122, 137, 113, 106, 82, 106, 118, 113, 114, 99, 107, 79, 116, 102, 78, 110, 117, 90, 75, 112, 98, 101, 88, 116, 75, 59, 92, 98, 75, 98, 92, 54, 63, 95, 99, 99, 116, 115, 75, 69, 106, 112, 106, 107, 103, 75, 79, 137, 129, 124, 131, 103, 103, 86, 150, 104, 102, 129, 144, 105, 77, 153, 113, 96, 108, 108, 93, 93, 159, 98, 124, 114, 112, 86, 90, 140, 119, 100, 113, 124, 86, 92, 100, 129, 117, 135, 138, 138, 148, 130, 127, 118, 106, 116, 95, 91, 108, 163, 140, 149, 112, 82, 82, 127, 129, 114, 130, 116, 112, 117, 151, 118, 180, 173, 159, 131, 123, 198, 229, 425]
+};
+const maData = {
+  year1: [49.0, 61.5, 63.0, 56.5, 56.2, 54.7, 51.1, 50.6, 47.4, 46.1, 48.9, 47.3, 47.3, 48.9, 51.6, 51.4, 51.3, 50.9, 53.6, 53.7, 52.6, 52.1, 55.3, 53.3, 53.1, 53.1, 52.4, 52.7, 55.9, 54.4, 58.4, 60.4, 59.6, 59.7, 58.6, 54.9, 50.9, 52.6, 52.4, 53.3, 54.9, 57.1, 57.1, 59.1, 55.9, 55.7, 54.4, 52.6, 53.4, 53.9, 54.9, 56.6, 54.0, 54.4, 54.7, 52.9, 52.4, 55.1, 54.4, 55.3, 57.1, 58.7, 59.0, 62.6, 58.4, 56.9, 57.9, 54.7, 52.3, 51.1, 46.7, 47.9, 46.3, 44.1, 45.7, 47.0, 47.4, 48.1, 49.7, 52.4, 54.1, 57.0, 55.0, 59.6, 62.9, 67.6, 69.7, 75.7, 74.1, 76.7, 75.3, 74.1, 71.4, 72.9, 68.7, 72.7, 76.7, 84.4, 81.1, 76.1, 68.3, 63.7, 56.6, 53.0, 43.3, 40.3, 40.0, 44.9, 49.6, 51.1, 47.9, 48.3, 50.0, 53.3, 53.9, 56.3, 58.3, 65.3, 66.7, 68.7, 67.1, 64.6, 59.6, 58.4, 54.0, 50.0, 47.9, 47.0, 49.1, 47.4, 46.3, 47.4, 48.6, 46.6, 47.3, 45.1, 49.6, 49.7, 51.6, 54.0, 54.0, 56.4, 57.7, 58.4, 59.0, 58.1, 56.9, 58.7, 57.4, 57.9, 61.9, 64.9, 67.3, 70.0, 73.1, 73.9, 75.3, 77.9, 80.9, 81.3, 80.6, 83.7, 87.6, 91.1, 84.0, 80.3, 79.1, 81.6, 78.7, 74.7, 73.4, 75.4, 76.1, 78.0, 78.6, 83.4, 84.4, 80.4, 73.4, 67.9, 62.9, 60.3, 58.7, 58.6, 61.9, 72.6, 77.9, 84.9, 87.4, 88.6, 92.9, 96.1, 93.3, 96.1, 91.9, 92.6, 89.3, 83.1, 79.7, 80.7, 77.6, 83.0, 86.4, 87.9, 92.7, 92.3, 90.9, 95.4, 91.3, 86.9, 86.6, 89.0, 93.6, 94.6, 92.1, 92.4, 95.7, 96.3, 91.9, 87.0, 85.6, 91.9, 95.1, 92.7, 96.6, 102.7, 107.3, 109.9, 107.6, 105.0, 106.4, 103.0, 98.4, 95.1, 93.0, 87.6, 88.1, 89.0, 87.0, 89.6, 89.0, 87.1, 85.9, 83.0, 78.4, 76.0, 70.4, 66.9, 66.3, 67.7, 64.9, 66.3, 65.7, 66.7, 70.3, 70.0, 69.7, 72.6, 69.6, 68.1, 66.7, 65.0, 63.9, 62.4, 62.3, 60.4, 62.9, 65.1, 63.1, 63.0, 62.0, 59.6, 63.4, 62.4, 56.7, 56.1, 54.7, 53.0, 51.7, 46.0, 43.6, 45.1, 45.4, 45.7, 43.1, 42.7, 43.4, 43.9, 43.1, 40.0, 39.7, 41.7, 42.0, 42.9, 42.6, 44.0, 44.6, 44.4, 44.3, 43.9, 43.7, 42.9, 40.6, 41.9, 40.9, 40.1, 40.6, 40.6, 42.4, 42.7, 43.0, 43.1, 45.1, 46.1, 47.6, 47.7, 49.7, 49.4, 49.4, 47.6, 47.9, 47.1, 45.7, 46.1, 47.6, 47.4, 47.9, 45.4, 44.7, 46.6, 47.1, 45.3, 44.3, 46.6, 47.4, 47.4, 47.3, 43.4, 42.7, 43.1, 40.4, 38.7, 39.6, 37.7, 39.4, 39.7, 39.7, 43.3, 46.0, 45.7, 46.0, 45.9, 48.7, 49.7, 46.6, 47.0, 46.9, 48.6, 48.9, 48.7, 51.0, 56.3, 57.0, 64.4, 74.4],
+  year2: [86.0, 77.5, 75.0, 69.0, 66.4, 64.8, 64.7, 62.7, 63.7, 66.3, 64.3, 64.9, 68.4, 69.3, 65.9, 64.1, 61.3, 64.3, 62.4, 60.3, 61.3, 64.7, 62.6, 61.7, 60.0, 60.3, 61.4, 61.6, 58.3, 60.9, 61.3, 63.0, 65.0, 63.0, 61.0, 63.0, 64.7, 63.0, 62.9, 60.6, 60.6, 58.9, 59.4, 59.0, 62.4, 63.0, 62.4, 66.7, 70.4, 70.4, 68.0, 66.9, 64.4, 65.3, 58.6, 55.7, 53.1, 52.1, 48.4, 50.0, 49.3, 52.9, 53.3, 54.7, 56.1, 56.9, 57.4, 58.3, 61.7, 62.3, 63.7, 65.0, 69.9, 67.9, 69.0, 65.7, 68.3, 67.4, 63.6, 62.9, 63.9, 65.1, 64.3, 64.6, 68.3, 74.6, 75.6, 80.1, 78.4, 80.7, 79.7, 79.7, 76.7, 74.4, 69.0, 71.6, 71.3, 60.1, 56.9, 59.0, 55.7, 54.0, 50.1, 47.3, 53.9, 53.1, 51.4, 53.6, 59.6, 65.1, 67.7, 68.0, 68.4, 66.7, 66.4, 65.6, 62.9, 60.6, 62.0, 64.9, 68.6, 71.7, 71.3, 70.1, 68.9, 68.6, 64.1, 62.3, 61.0, 61.1, 62.4, 63.4, 62.4, 64.9, 63.0, 66.3, 67.3, 68.7, 67.9, 67.4, 65.9, 67.0, 63.6, 60.4, 58.4, 58.4, 59.3, 58.3, 57.3, 57.0, 59.3, 63.7, 64.6, 64.4, 69.9, 72.4, 71.6, 74.4, 72.0, 73.4, 80.1, 80.1, 83.3, 84.3, 82.9, 89.3, 91.7, 85.3, 82.9, 78.9, 81.3, 83.4, 78.1, 77.4, 78.6, 80.4, 82.6, 83.9, 83.0, 82.1, 82.0, 85.3, 87.6, 88.7, 89.0, 88.9, 88.7, 87.4, 86.3, 88.9, 91.0, 93.0, 95.4, 100.1, 102.1, 102.3, 100.1, 101.7, 102.3, 99.7, 101.4, 103.9, 104.1, 108.7, 110.0, 111.6, 114.7, 114.9, 115.7, 118.9, 117.7, 117.7, 114.1, 116.9, 113.4, 110.3, 107.9, 105.4, 103.1, 103.7, 101.0, 104.1, 107.1, 109.6, 112.3, 115.9, 118.0, 119.1, 116.6, 113.1, 112.3, 109.6, 105.6, 104.6, 108.0, 106.6, 106.0, 105.1, 104.3, 102.7, 102.7, 95.4, 95.0, 97.3, 96.4, 92.6, 89.0, 88.6, 88.1, 87.9, 84.1, 81.6, 80.9, 79.9, 74.9, 77.1, 74.3, 72.3, 69.0, 68.9, 69.1, 68.3, 62.0, 62.1, 62.9, 65.4, 64.1, 64.4, 62.3, 62.6, 61.3, 60.9, 59.7, 60.3, 57.1, 59.0, 62.0, 61.3, 61.7, 61.0, 62.1, 64.7, 64.0, 63.3, 64.6, 62.7, 62.9, 62.4, 60.4, 61.0, 60.3, 60.7, 62.0, 61.7, 62.4, 64.6, 63.9, 64.1, 65.1, 67.3, 69.3, 65.9, 65.0, 64.9, 64.0, 62.6, 60.1, 60.4, 62.1, 65.1, 65.9, 66.1, 66.7, 68.4, 66.4, 66.9, 64.4, 64.1, 65.4, 65.3, 65.7, 64.3, 68.4, 70.4, 75.9, 78.7, 78.1, 76.7, 80.3, 74.7, 73.7, 69.1, 64.3, 66.4, 68.4, 67.7, 71.4, 70.9, 73.0, 74.9, 73.3, 70.9, 70.4, 69.4, 71.9, 67.4, 64.1, 63.0, 64.3, 60.7, 57.4, 55.4, 56.3, 58.4, 59.9, 60.4, 67.1, 69.3, 70.9, 75.0, 74.7, 76.0, 76.7, 77.4, 84.3],
+  year3: [96.0, 102.0, 94.3, 93.0, 99.8, 99.3, 99.3, 103.6, 106.7, 108.6, 107.9, 111.9, 118.4, 124.0, 120.7, 119.7, 120.1, 123.6, 121.4, 120.4, 119.4, 123.9, 123.1, 125.6, 125.3, 126.7, 122.1, 118.0, 115.0, 115.3, 123.3, 120.3, 114.4, 116.7, 121.0, 120.0, 118.9, 106.6, 106.6, 110.4, 108.0, 105.9, 106.7, 105.3, 108.0, 112.1, 109.1, 107.0, 103.9, 95.6, 95.9, 91.9, 85.1, 81.7, 84.0, 81.9, 86.9, 91.6, 100.3, 98.0, 97.7, 97.7, 98.7, 100.1, 89.1, 78.6, 83.3, 85.9, 86.7, 87.0, 89.4, 95.9, 102.9, 104.0, 101.4, 103.1, 103.1, 98.0, 89.0, 80.3, 76.4, 77.4, 77.3, 77.6, 87.6, 96.7, 100.4, 104.7, 110.6, 126.1, 130.3, 125.6, 124.7, 129.4, 128.9, 124.4, 108.0, 103.0, 95.3, 90.4, 85.3, 80.6, 74.7, 69.9, 68.7, 70.4, 71.1, 70.4, 71.0, 69.9, 69.6, 70.0, 68.7, 68.1, 70.3, 71.1, 74.9, 75.7, 78.9, 86.1, 88.9, 88.4, 87.9, 82.9, 78.6, 76.1, 70.9, 70.0, 72.0, 74.3, 78.3, 83.4, 82.4, 83.9, 88.1, 92.0, 91.9, 90.4, 89.3, 94.3, 93.0, 91.0, 85.1, 85.9, 89.4, 90.4, 86.9, 86.7, 84.6, 88.3, 90.9, 94.0, 94.6, 92.0, 94.7, 95.9, 89.4, 84.3, 81.6, 80.1, 83.9, 91.1, 97.6, 103.4, 110.1, 107.3, 110.9, 113.7, 105.9, 101.1, 103.1, 100.6, 101.9, 103.4, 103.3, 105.4, 109.0, 109.7, 109.1, 111.3, 117.6, 118.7, 122.6, 124.0, 123.9, 126.9, 128.9, 120.4, 124.3, 124.3, 121.7, 122.6, 126.3, 129.0, 133.3, 130.3, 127.1, 129.7, 132.7, 131.7, 129.4, 131.6, 130.9, 133.0, 135.1, 134.4, 134.6, 132.4, 128.6, 130.3, 133.6, 135.6, 135.1, 134.6, 135.9, 143.3, 148.7, 145.4, 145.0, 145.7, 147.9, 149.1, 145.1, 142.7, 151.6, 150.4, 153.0, 157.9, 160.3, 164.3, 165.6, 160.6, 164.7, 163.6, 158.3, 160.4, 159.1, 155.4, 154.4, 143.3, 141.1, 136.4, 132.4, 131.3, 131.1, 127.1, 131.7, 128.3, 128.1, 122.4, 115.0, 112.0, 110.7, 107.4, 105.4, 105.6, 105.1, 106.6, 104.3, 99.3, 98.7, 101.3, 98.9, 98.3, 97.7, 97.1, 100.4, 97.3, 97.1, 95.0, 92.7, 89.9, 89.9, 86.1, 87.6, 84.1, 81.1, 81.7, 82.1, 82.3, 85.7, 88.3, 91.6, 94.6, 95.4, 97.0, 98.9, 99.9, 98.6, 96.9, 96.9, 98.3, 102.7, 105.1, 107.7, 111.1, 111.1, 115.1, 116.1, 118.0, 114.4, 111.3, 111.0, 116.9, 117.1, 115.9, 116.3, 117.6, 116.7, 113.7, 108.6, 106.9, 109.1, 110.0, 107.9, 111.9, 112.7, 113.3, 112.3, 111.9, 109.1, 112.1, 108.7, 108.6, 110.3, 110.3, 110.6, 104.9, 106.3, 108.7, 111.9, 113.9, 121.3, 129.3, 133.6, 133.3, 133.4, 129.3, 126.1, 120.0, 111.9, 108.7, 113.9, 117.0, 123.1, 122.6, 120.7, 119.4, 122.1, 117.3, 113.6, 110.9, 111.4, 115.7, 120.7, 124.1, 122.6, 132.0, 138.1, 144.3, 147.0, 147.9, 154.6, 170.4, 205.4]
+};
+
+let currentView = 'ma';
+let showAnnotations = true;
+
+const annotationDefs = [{"day": 122, "year": "Year 3", "color": "#e65100", "label": "Free taksit removed (~Aug 2023)"}, {"day": 306, "year": "Year 3", "color": "#e65100", "label": "KuveytTurk 6+3 deal (Feb 2024)"}, {"day": 131, "year": "Year 2", "color": "#1565c0", "label": "9 taksit dropped (Aug 2024)"}, {"day": 226, "year": "Year 2", "color": "#1565c0", "label": "No free installment any bank (Nov 2024)"}, {"day": 85, "year": "Year 1", "color": "#2e7d32", "label": "Ziraat Katilim partnership (Jul 2025)"}, {"day": 326, "year": "Year 1", "color": "#2e7d32", "label": "New taksit table format (Mar 2026)"}];
+
+function buildAnnotations() {
+  const annos = {};
+  annotationDefs.forEach((a, i) => {
+    annos['line'+i] = {
+      type: 'line',
+      xMin: a.day - 1,
+      xMax: a.day - 1,
+      borderColor: a.color,
+      borderWidth: 2,
+      borderDash: [6, 4],
+      display: showAnnotations,
+      label: {
+        display: showAnnotations,
+        content: a.label,
+        position: i % 2 === 0 ? 'start' : 'end',
+        backgroundColor: a.color,
+        color: 'white',
+        font: { size: 10, weight: 'bold' },
+        padding: { x: 6, y: 3 },
+        borderRadius: 4,
+        yAdjust: i % 3 === 0 ? -10 : (i % 3 === 1 ? 10 : 30)
+      }
+    };
+  });
+  return annos;
+}
+
+const ctx = document.getElementById('chart').getContext('2d');
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: labels,
+    datasets: [
+      {
+        label: 'Year 3 (730-1095 days ago)',
+        data: maData.year1,
+        borderColor: '#e65100',
+        backgroundColor: 'rgba(230,81,0,0.05)',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.3,
+        fill: false
+      },
+      {
+        label: 'Year 2 (365-730 days ago)',
+        data: maData.year2,
+        borderColor: '#1565c0',
+        backgroundColor: 'rgba(21,101,192,0.05)',
+        borderWidth: 2,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.3,
+        fill: false
+      },
+      {
+        label: 'Year 1 (Last 365 days)',
+        data: maData.year3,
+        borderColor: '#2e7d32',
+        backgroundColor: 'rgba(46,125,50,0.1)',
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        tension: 0.3,
+        fill: true
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
+    plugins: {
+      annotation: {
+        annotations: buildAnnotations()
+      },
+      tooltip: {
+        callbacks: {
+          title: function(items) { return 'Day ' + (items[0].dataIndex + 1) + ' (' + items[0].label + ')'; }
+        }
+      },
+      legend: {
+        position: 'top',
+        labels: { usePointStyle: true, padding: 20, font: { size: 13 } }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          maxTicksLimit: 24,
+          font: { size: 11 }
+        },
+        grid: { display: false }
+      },
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: 'Bookings', font: { size: 13 } },
+        grid: { color: 'rgba(0,0,0,0.06)' }
+      }
+    }
+  }
+});
+
+function toggleView(view) {
+  currentView = view;
+  const src = view === 'raw' ? rawData : maData;
+  chart.data.datasets[0].data = src.year1;
+  chart.data.datasets[1].data = src.year2;
+  chart.data.datasets[2].data = src.year3;
+  chart.data.datasets[0].borderWidth = view === 'raw' ? 1 : 2;
+  chart.data.datasets[1].borderWidth = view === 'raw' ? 1 : 2;
+  chart.data.datasets[2].borderWidth = view === 'raw' ? 1 : 2.5;
+  chart.update();
+  document.getElementById('btn-raw').className = view === 'raw' ? 'toggle-btn active' : 'toggle-btn';
+  document.getElementById('btn-ma').className = view === 'ma' ? 'toggle-btn active' : 'toggle-btn';
+}
+
+function toggleAnnotations() {
+  showAnnotations = !showAnnotations;
+  const btn = document.getElementById('btn-anno');
+  btn.className = showAnnotations ? 'toggle-btn active' : 'toggle-btn';
+  btn.textContent = showAnnotations ? 'Show Events' : 'Hide Events';
+  chart.options.plugins.annotation.annotations = buildAnnotations();
+  chart.update();
+}
+</script>
+</body>
+</html>
